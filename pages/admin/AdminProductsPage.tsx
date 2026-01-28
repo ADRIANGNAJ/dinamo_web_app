@@ -109,6 +109,17 @@ const AdminProductsPage: React.FC = () => {
         <div className="flex justify-center py-12">
           <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
         </div>
+      ) : products.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300">
+          <div className="bg-white p-4 rounded-full shadow-sm mb-4">
+            <ImageIcon className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-1">No hay productos aún</h3>
+          <p className="text-sm text-gray-500 mb-6 max-w-sm">
+            Tu menú está vacío. Agrega tus primeros productos para comenzar a vender.
+          </p>
+
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map(product => (

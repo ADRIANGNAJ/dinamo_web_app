@@ -66,7 +66,7 @@ const CheckoutPage: React.FC = () => {
   const initStripePayment = async () => {
     setIsProcessing(true);
     try {
-      const response = await fetch('http://localhost:4242/create-payment-intent', {
+      const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items }), // Send items for server-side calculation
