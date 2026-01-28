@@ -1,0 +1,5 @@
+{
+  "name": "DINAMO",
+  "description": "A fully functional frontend-only coffee shop application for pickup orders with admin management.",
+  "requestFramePermissions": []
+}
