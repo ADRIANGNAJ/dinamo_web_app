@@ -85,3 +85,39 @@ export const updateOrderStatus = async (orderId: string, status: OrderStatus): P
     const orderRef = doc(db, ORDERS_COLLECTION, orderId);
     await setDoc(orderRef, { status }, { merge: true });
 };
+
+export const getOrderByCode = async (code: string): Promise<Order | undefined> => {
+    const q = query(collection(db, ORDERS_COLLECTION), where('code', '==', code));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+        return querySnapshot.docs[0].data() as Order;
+    }
+    return undefined;
+};
+
+export const getOrdersByCodes = async (codes: string[]): Promise<Order[]> => {
+    if (!codes || codes.length === 0) return [];
+
+    // Firestore 'in' query supports up to 10 values. If we have more, we might need multiple queries.
+    // For simplicity, let's just fetch everything and filter? No, inefficient.
+    // Better: split into chunks of 10 if needed.
+    // For this MVP, assuming user doesn't have > 10 active orders is probably safe, 
+    // BUT 'My Orders' is history. A better approach for history might be fetching all and filtering in memory if scale is small, 
+    // OR just looping parallel requests if the list is small. 
+    // Let's implement robust chunking for safety.
+
+    const chunks = [];
+    for (let i = 0; i < codes.length; i += 10) {
+        chunks.push(codes.slice(i, i + 10));
+    }
+
+    const orders: Order[] = [];
+    for (const chunk of chunks) {
+        const q = query(collection(db, ORDERS_COLLECTION), where('code', 'in', chunk));
+        const snapshot = await getDocs(q);
+        snapshot.forEach(doc => orders.push(doc.data() as Order));
+    }
+
+    // client-side sort
+    return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+};

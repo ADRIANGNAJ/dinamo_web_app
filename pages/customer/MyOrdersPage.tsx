@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getMyOrders } from '../../services/storage';
+import { getOrdersByCodes } from '../../services/db';
+
 import { Order } from '../../types';
 import { ORDER_STATUS_COLORS } from '../../constants';
 import Button from '../../components/Button';
@@ -9,11 +10,22 @@ import { Package, Clock, ChevronRight, Plus } from 'lucide-react';
 const MyOrdersPage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
 
+
+
   useEffect(() => {
-    // Fetch orders stored in local history
-    const myOrders = getMyOrders();
-    // Sort by most recent
-    setOrders(myOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    const fetchOrders = async () => {
+      const savedCodesStr = localStorage.getItem('my_order_codes');
+      if (savedCodesStr) {
+        try {
+          const codes = JSON.parse(savedCodesStr);
+          const myOrders = await getOrdersByCodes(codes);
+          setOrders(myOrders);
+        } catch (error) {
+          console.error("Error fetching my orders:", error);
+        }
+      }
+    };
+    fetchOrders();
   }, []);
 
   if (orders.length === 0) {
@@ -36,17 +48,17 @@ const MyOrdersPage: React.FC = () => {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Mis Pedidos</h1>
         <Link to="/menu">
-           <Button className="flex items-center gap-2">
-             <Plus className="w-4 h-4" /> Nuevo Pedido
-           </Button>
+          <Button className="flex items-center gap-2">
+            <Plus className="w-4 h-4" /> Nuevo Pedido
+          </Button>
         </Link>
       </div>
-      
+
       <div className="space-y-4">
         {orders.map(order => (
           <Link key={order.id} to={`/order/${order.code}`} className="block group">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-              
+
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
                   <span className="font-mono font-bold text-blue-700 text-lg">#{order.code}</span>
@@ -54,10 +66,10 @@ const MyOrdersPage: React.FC = () => {
                     {order.status}
                   </span>
                 </div>
-                
+
                 <div className="text-sm text-gray-500 flex items-center gap-2">
-                   <Clock className="w-4 h-4" />
-                   <span>{new Date(order.createdAt).toLocaleDateString()} a las {new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                  <Clock className="w-4 h-4" />
+                  <span>{new Date(order.createdAt).toLocaleDateString()} a las {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
 
                 <div className="text-gray-900 font-medium">
