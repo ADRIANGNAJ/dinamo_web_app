@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Search, Menu, X, Lock, Package } from 'lucide-react';
 import { useCart } from '../store/CartContext';
-import { getAppLogo } from '../services/storage';
+import { getAppConfig } from '../services/db';
 
 const Layout: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,27 +13,28 @@ const Layout: React.FC = () => {
 
   // Check for custom logo on mount and location change (to catch updates from admin panel)
   useEffect(() => {
-    const logo = getAppLogo();
-    setCustomLogo(logo);
+    const fetchLogo = async () => {
+      const config = await getAppConfig();
+      if (config?.logoUrl) setCustomLogo(config.logoUrl);
+    };
+    fetchLogo();
   }, [location.pathname]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
 
   const isActive = (path: string) => location.pathname === path;
-  
-  const navClass = (path: string) => 
-    `flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${
-      isActive(path) 
-        ? 'bg-blue-100 text-blue-900 font-medium' 
-        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+
+  const navClass = (path: string) =>
+    `flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${isActive(path)
+      ? 'bg-blue-100 text-blue-900 font-medium'
+      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
     }`;
 
   const mobileNavClass = (path: string) =>
-    `flex items-center space-x-3 px-4 py-3 text-lg font-medium border-l-4 ${
-      isActive(path)
-        ? 'border-blue-600 bg-blue-50 text-blue-900'
-        : 'border-transparent text-gray-600 hover:bg-gray-50'
+    `flex items-center space-x-3 px-4 py-3 text-lg font-medium border-l-4 ${isActive(path)
+      ? 'border-blue-600 bg-blue-50 text-blue-900'
+      : 'border-transparent text-gray-600 hover:bg-gray-50'
     }`;
 
   return (
@@ -47,9 +48,9 @@ const Layout: React.FC = () => {
               {customLogo ? (
                 <img src={customLogo} alt="Logo" className="h-10 w-auto object-contain" />
               ) : (
-                <svg 
-                  viewBox="0 0 100 100" 
-                  className="h-10 w-10 text-blue-700" 
+                <svg
+                  viewBox="0 0 100 100"
+                  className="h-10 w-10 text-blue-700"
                   fill="currentColor"
                   xmlns="http://www.w3.org/2000/svg"
                 >
@@ -84,7 +85,7 @@ const Layout: React.FC = () => {
                   </span>
                 )}
               </Link>
-              
+
               <button onClick={toggleMenu} className="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-md">
                 {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
@@ -126,7 +127,7 @@ const Layout: React.FC = () => {
       <footer className="bg-white border-t border-gray-200 py-8 mt-auto">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
           <p>© {new Date().getFullYear()} DINAMO. Todos los derechos reservados.</p>
-          
+
           {/* Discreet Admin Link */}
           <Link to="/admin/login" className="flex items-center gap-1 hover:text-blue-600 transition-colors opacity-60 hover:opacity-100">
             <Lock className="w-3 h-3" />

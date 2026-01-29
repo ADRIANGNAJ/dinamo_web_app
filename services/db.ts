@@ -121,3 +121,23 @@ export const getOrdersByCodes = async (codes: string[]): Promise<Order[]> => {
     // client-side sort
     return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 };
+
+// -- App Config (Global Settings) --
+
+export interface AppConfig {
+    logoUrl?: string;
+    // Add other global settings here if needed
+}
+
+export const saveAppConfig = async (config: AppConfig): Promise<void> => {
+    await setDoc(doc(db, 'settings', 'global'), config, { merge: true });
+};
+
+export const getAppConfig = async (): Promise<AppConfig | null> => {
+    const docRef = doc(db, 'settings', 'global');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        return docSnap.data() as AppConfig;
+    }
+    return null;
+};
