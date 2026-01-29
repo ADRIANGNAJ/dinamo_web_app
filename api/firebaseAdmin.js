@@ -1,4 +1,7 @@
-const admin = require("firebase-admin");
+import admin from "firebase-admin";
+
+// Create a mock of process.env if it's undefined (though in Vercel it should be defined)
+// but standard ESM access to process.env is supported in Node.js
 
 if (!admin.apps.length) {
     // Check if environment variables are present
@@ -22,4 +25,4 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-module.exports = { db };
+export { db };

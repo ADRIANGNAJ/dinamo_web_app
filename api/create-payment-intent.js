@@ -1,9 +1,9 @@
-const Stripe = require("stripe");
-const { db } = require("./firebaseAdmin");
+import Stripe from "stripe";
+import { db } from "./firebaseAdmin.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
     if (req.method !== 'POST') {
         res.setHeader('Allow', 'POST');
         return res.status(405).end('Method Not Allowed');
