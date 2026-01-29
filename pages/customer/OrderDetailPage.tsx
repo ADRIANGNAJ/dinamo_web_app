@@ -72,9 +72,12 @@ const OrderDetailPage: React.FC = () => {
 
             // Show Browser Notification
             if (Notification.permission === 'granted') {
+              console.log("Sending polling notification:", msg);
               new Notification("¡Actualización de Pedido!", {
                 body: msg,
               });
+            } else {
+              console.log("Notification permission not granted during poll:", Notification.permission);
             }
           }
         }
@@ -120,7 +123,7 @@ const OrderDetailPage: React.FC = () => {
       )}
 
       {/* Enable Notifications Banner */}
-      {!notificationsEnabled && (
+      {!notificationsEnabled ? (
         <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-yellow-800">
             <Bell className="w-5 h-5" />
@@ -133,14 +136,28 @@ const OrderDetailPage: React.FC = () => {
             Activar Avisos
           </button>
         </div>
+      ) : (
+        <div className="mb-4 text-center">
+          <button
+            onClick={() => {
+              console.log("Testing notification...");
+              new Notification("Prueba de Notificación", {
+                body: "Si ves esto, las notificaciones funcionan correctamente.",
+              });
+            }}
+            className="text-xs text-blue-600 underline"
+          >
+            Probar Notificación
+          </button>
+        </div>
       )}
 
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
 
         {/* Header Status */}
         <div className={`p-6 text-white text-center transition-colors duration-500 ${order.status === 'LISTO' ? 'bg-green-600' :
-            order.status === 'CANCELADO' ? 'bg-red-600' :
-              'bg-blue-700'
+          order.status === 'CANCELADO' ? 'bg-red-600' :
+            'bg-blue-700'
           }`}>
           <h1 className="text-sm font-medium opacity-90 uppercase tracking-wider mb-2">Estado del Pedido</h1>
           <div className="inline-flex items-center gap-2 bg-white/20 px-6 py-3 rounded-full backdrop-blur-sm animate-pulse">
