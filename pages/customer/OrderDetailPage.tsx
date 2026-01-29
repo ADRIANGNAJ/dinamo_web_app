@@ -140,43 +140,7 @@ const OrderDetailPage: React.FC = () => {
             Activar Avisos
           </button>
         </div>
-      ) : (
-        <div className="mb-4 text-center">
-          <button
-            onClick={() => {
-              console.log("Testing notification...");
-              if (Notification.permission === 'granted') {
-                console.log("Permission granted. Checking Service Worker...");
-
-                const swTimeout = new Promise((_, reject) =>
-                  setTimeout(() => reject(new Error("SW Timeout")), 2000)
-                );
-
-                Promise.race([navigator.serviceWorker.ready, swTimeout])
-                  .then((registration: any) => {
-                    console.log("Service Worker ready:", registration);
-                    registration.showNotification("Prueba de Notificación Test", {
-                      body: "Si ves esto, las notificaciones funcionan al 100% en Móvil y Desktop.",
-                      icon: '/vite.svg',
-                      badge: '/vite.svg'
-                    })
-                      .then(() => alert("Notificación enviada (Revisa tu barra de estado)"))
-                      .catch((err: any) => alert("Error enviando: " + err.message));
-                  })
-                  .catch((err: any) => {
-                    console.error("SW Error:", err);
-                    alert("Error: Service Worker no está listo. Intenta recargar. " + err.message);
-                  });
-              } else {
-                alert("Permiso denegado: " + Notification.permission);
-              }
-            }}
-            className="text-xs text-blue-600 underline"
-          >
-            Probar Notificación
-          </button>
-        </div>
-      )}
+      ) : null}
 
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
 
