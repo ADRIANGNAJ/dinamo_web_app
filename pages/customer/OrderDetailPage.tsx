@@ -70,11 +70,15 @@ const OrderDetailPage: React.FC = () => {
             setToastMessage(msg);
             setTimeout(() => setToastMessage(null), 5000);
 
-            // Show Browser Notification
+            // Show Browser Notification via Service Worker
             if (Notification.permission === 'granted') {
               console.log("Sending polling notification:", msg);
-              new Notification("¡Actualización de Pedido!", {
-                body: msg,
+              navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification("¡Actualización de Pedido!", {
+                  body: msg,
+                  icon: '/vite.svg',
+                  badge: '/vite.svg'
+                });
               });
             } else {
               console.log("Notification permission not granted during poll:", Notification.permission);
@@ -141,9 +145,15 @@ const OrderDetailPage: React.FC = () => {
           <button
             onClick={() => {
               console.log("Testing notification...");
-              new Notification("Prueba de Notificación", {
-                body: "Si ves esto, las notificaciones funcionan correctamente.",
-              });
+              if (Notification.permission === 'granted') {
+                navigator.serviceWorker.ready.then(registration => {
+                  registration.showNotification("Prueba de Notificación Test", {
+                    body: "Si ves esto, las notificaciones funcionan al 100% en Móvil y Desktop.",
+                    icon: '/vite.svg',
+                    badge: '/vite.svg'
+                  });
+                });
+              }
             }}
             className="text-xs text-blue-600 underline"
           >
