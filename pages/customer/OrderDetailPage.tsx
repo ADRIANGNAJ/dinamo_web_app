@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getOrderByCode } from '../../services/storage';
+import { getOrderByCode } from '../../services/db';
 import { Order } from '../../types';
 import { ORDER_STATUS_COLORS } from '../../constants';
 import Button from '../../components/Button';
@@ -12,7 +12,7 @@ const OrderDetailPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  
+
   // Use refs to track state in interval callback
   const orderRef = useRef<Order | null>(null);
 
@@ -36,38 +36,50 @@ const OrderDetailPage: React.FC = () => {
   useEffect(() => {
     if (!orderCode) return;
 
+    const fetchOrder = async () => {
+      try {
+        const data = await getOrderByCode(orderCode);
+        if (data) {
+          setOrder(data);
+          orderRef.current = data;
+        }
+      } catch (error) {
+        console.error("Error fetching order:", error);
+      }
+    };
+
     // Initial load
-    const initialOrder = getOrderByCode(orderCode);
-    if (initialOrder) {
-      setOrder(initialOrder);
-      orderRef.current = initialOrder;
-    }
+    fetchOrder();
 
     // Polling interval (every 5 seconds)
-    const interval = setInterval(() => {
-      const currentOrder = getOrderByCode(orderCode);
-      const previousOrder = orderRef.current;
+    const interval = setInterval(async () => {
+      try {
+        const currentOrder = await getOrderByCode(orderCode);
+        const previousOrder = orderRef.current;
 
-      if (currentOrder && previousOrder) {
-        // Update state
-        setOrder(currentOrder);
-        orderRef.current = currentOrder;
+        if (currentOrder && previousOrder) {
+          // Update state
+          setOrder(currentOrder);
+          orderRef.current = currentOrder;
 
-        // Check for status change
-        if (currentOrder.status !== previousOrder.status) {
-          const msg = `El estado de tu pedido cambió a: ${currentOrder.status}`;
-          
-          // Show In-App Toast
-          setToastMessage(msg);
-          setTimeout(() => setToastMessage(null), 5000);
+          // Check for status change
+          if (currentOrder.status !== previousOrder.status) {
+            const msg = `El estado de tu pedido cambió a: ${currentOrder.status}`;
 
-          // Show Browser Notification
-          if (Notification.permission === 'granted') {
-            new Notification("¡Actualización de Pedido!", {
-              body: msg,
-            });
+            // Show In-App Toast
+            setToastMessage(msg);
+            setTimeout(() => setToastMessage(null), 5000);
+
+            // Show Browser Notification
+            if (Notification.permission === 'granted') {
+              new Notification("¡Actualización de Pedido!", {
+                body: msg,
+              });
+            }
           }
         }
+      } catch (error) {
+        console.error("Error polling order:", error);
       }
     }, 5000);
 
@@ -96,7 +108,7 @@ const OrderDetailPage: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto relative">
-      
+
       {/* Notification Toast */}
       {toastMessage && (
         <div className="fixed top-20 right-4 z-50 bg-blue-800 text-white p-4 rounded-lg shadow-xl animate-bounce">
@@ -111,10 +123,10 @@ const OrderDetailPage: React.FC = () => {
       {!notificationsEnabled && (
         <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-yellow-800">
-             <Bell className="w-5 h-5" />
-             <span className="text-sm font-medium">Activa notificaciones para saber cuando tu café esté listo.</span>
+            <Bell className="w-5 h-5" />
+            <span className="text-sm font-medium">Activa notificaciones para saber cuando tu café esté listo.</span>
           </div>
-          <button 
+          <button
             onClick={requestNotificationPermission}
             className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-900 font-bold py-2 px-4 rounded-lg transition-colors"
           >
@@ -124,13 +136,12 @@ const OrderDetailPage: React.FC = () => {
       )}
 
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-        
+
         {/* Header Status */}
-        <div className={`p-6 text-white text-center transition-colors duration-500 ${
-           order.status === 'LISTO' ? 'bg-green-600' : 
-           order.status === 'CANCELADO' ? 'bg-red-600' : 
-           'bg-blue-700'
-        }`}>
+        <div className={`p-6 text-white text-center transition-colors duration-500 ${order.status === 'LISTO' ? 'bg-green-600' :
+            order.status === 'CANCELADO' ? 'bg-red-600' :
+              'bg-blue-700'
+          }`}>
           <h1 className="text-sm font-medium opacity-90 uppercase tracking-wider mb-2">Estado del Pedido</h1>
           <div className="inline-flex items-center gap-2 bg-white/20 px-6 py-3 rounded-full backdrop-blur-sm animate-pulse">
             <span className="font-bold text-2xl">{order.status}</span>
@@ -139,16 +150,16 @@ const OrderDetailPage: React.FC = () => {
         </div>
 
         <div className="p-6 md:p-8 space-y-8">
-          
+
           {/* Code */}
           <div className="text-center">
-             <p className="text-sm text-gray-500 mb-1">Código de Recolección (Guárdalo)</p>
-             <div className="flex justify-center items-center gap-3">
-               <span className="text-4xl font-mono font-bold text-gray-900 tracking-wider">{order.code}</span>
-               <button onClick={copyCode} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500">
-                 {copied ? <CheckCircle className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5" />}
-               </button>
-             </div>
+            <p className="text-sm text-gray-500 mb-1">Código de Recolección (Guárdalo)</p>
+            <div className="flex justify-center items-center gap-3">
+              <span className="text-4xl font-mono font-bold text-gray-900 tracking-wider">{order.code}</span>
+              <button onClick={copyCode} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500">
+                {copied ? <CheckCircle className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
 
           {/* Info Grid */}
@@ -174,7 +185,7 @@ const OrderDetailPage: React.FC = () => {
                 <p className="text-gray-600">{order.customerPhone}</p>
               </div>
             </div>
-             <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3">
               <CheckCircle className="w-5 h-5 text-blue-600 mt-1" />
               <div>
                 <p className="font-semibold text-gray-900">Pago</p>
@@ -206,11 +217,11 @@ const OrderDetailPage: React.FC = () => {
               <span className="font-bold text-xl text-blue-700">${order.total}</span>
             </div>
           </div>
-          
+
           <div className="text-center pt-4">
-             <Link to="/menu">
-               <Button variant="outline">Volver al Menú</Button>
-             </Link>
+            <Link to="/menu">
+              <Button variant="outline">Volver al Menú</Button>
+            </Link>
           </div>
 
         </div>

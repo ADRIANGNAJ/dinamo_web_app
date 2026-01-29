@@ -12,7 +12,13 @@ const OrderSuccessPage: React.FC = () => {
 
   useEffect(() => {
     if (orderCode) {
-      getOrderByCode(orderCode).then(setOrder).catch(console.error);
+      console.log("Fetching order:", orderCode);
+      getOrderByCode(orderCode)
+        .then(data => {
+          console.log("Order fetched:", data);
+          setOrder(data || null);
+        })
+        .catch(err => console.error("Error fetching order:", err));
     }
   }, [orderCode]);
 
@@ -24,6 +30,10 @@ const OrderSuccessPage: React.FC = () => {
     }
   };
 
+  if (!order) {
+    return <div className="p-8 text-center text-gray-500">Cargando detalles del pedido...</div>;
+  }
+
   return (
     <div className="max-w-md mx-auto py-12 text-center px-4">
       <div className="mb-8 flex justify-center">
@@ -33,7 +43,7 @@ const OrderSuccessPage: React.FC = () => {
       </div>
 
       {order?.paymentMethod === PaymentMethod.ONLINE && (
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl animate-fade-in-up">
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
           <div className="flex items-center justify-center gap-2 text-blue-800 font-bold text-lg mb-1">
             <PartyPopper className="w-6 h-6" />
             ¡Pago Aprobado!
