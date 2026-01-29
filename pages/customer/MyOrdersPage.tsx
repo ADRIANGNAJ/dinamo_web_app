@@ -19,13 +19,18 @@ const MyOrdersPage: React.FC = () => {
         try {
           const codes = JSON.parse(savedCodesStr);
           const myOrders = await getOrdersByCodes(codes);
-          setOrders(myOrders);
+          // Sort by recent first
+          setOrders(myOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
         } catch (error) {
           console.error("Error fetching my orders:", error);
         }
       }
     };
+
     fetchOrders();
+    const interval = setInterval(fetchOrders, 10000); // Poll every 10 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   if (orders.length === 0) {
