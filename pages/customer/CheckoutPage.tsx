@@ -14,7 +14,9 @@ import { Elements } from '@stripe/react-stripe-js';
 
 // Initialize Stripe outside component
 // Make sure you have this environment variable set in .env.local
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '', {
+  stripeAccount: import.meta.env.VITE_STRIPE_CONNECT_ACCOUNT_ID,
+});
 
 const CheckoutPage: React.FC = () => {
   const { items, subtotal, clearCart } = useCart();

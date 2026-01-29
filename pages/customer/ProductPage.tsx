@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getProductById, getExtras } from '../../services/storage';
+import { getProductById, getExtras } from '../../services/db';
 import { Product, Extra } from '../../types';
 import { useCart } from '../../store/CartContext';
 import Button from '../../components/Button';
@@ -17,21 +17,33 @@ const ProductPage: React.FC = () => {
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
 
   useEffect(() => {
-    // Load product
-    if (id) {
-      const p = getProductById(id);
-      if (p) setProduct(p);
-      else navigate('/menu'); // Redirect if not found
-    }
-    // Load extras
-    setExtrasList(getExtras());
+    const fetchData = async () => {
+      // Load product
+      if (id) {
+        try {
+          const p = await getProductById(id);
+          if (p) setProduct(p);
+          else navigate('/menu'); // Redirect if not found
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      // Load extras
+      try {
+        const extras = await getExtras();
+        setExtrasList(extras);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchData();
   }, [id, navigate]);
 
   if (!product) return null;
 
   const toggleExtra = (extraName: string) => {
-    setSelectedExtras(prev => 
-      prev.includes(extraName) 
+    setSelectedExtras(prev =>
+      prev.includes(extraName)
         ? prev.filter(e => e !== extraName)
         : [...prev, extraName]
     );
@@ -62,8 +74,8 @@ const ProductPage: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <button 
-        onClick={() => navigate(-1)} 
+      <button
+        onClick={() => navigate(-1)}
         className="flex items-center text-gray-500 hover:text-gray-900 mb-6"
       >
         <ArrowLeft className="w-5 h-5 mr-1" /> Volver al menú
@@ -71,13 +83,13 @@ const ProductPage: React.FC = () => {
 
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         <img src={product.image} alt={product.name} className="w-full h-64 object-cover" />
-        
+
         <div className="p-6 md:p-8">
           <div className="flex justify-between items-start mb-4">
             <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
             <span className="text-2xl font-bold text-blue-700">${product.price}</span>
           </div>
-          
+
           <p className="text-gray-600 mb-8">{product.description}</p>
 
           {/* Extras */}
@@ -118,7 +130,7 @@ const ProductPage: React.FC = () => {
           {/* Quantity & Action */}
           <div className="flex flex-col sm:flex-row gap-4 items-center border-t pt-6">
             <div className="flex items-center border border-gray-300 rounded-lg">
-              <button 
+              <button
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
                 className="p-3 hover:bg-gray-100 text-gray-600 transition-colors"
                 title="Disminuir cantidad"
@@ -126,7 +138,7 @@ const ProductPage: React.FC = () => {
                 <Minus className="w-5 h-5" />
               </button>
               <span className="w-12 text-center font-bold text-lg text-gray-900">{quantity}</span>
-              <button 
+              <button
                 onClick={() => setQuantity(quantity + 1)}
                 className="p-3 hover:bg-gray-100 text-gray-600 transition-colors"
                 title="Aumentar cantidad"
@@ -134,10 +146,10 @@ const ProductPage: React.FC = () => {
                 <Plus className="w-5 h-5" />
               </button>
             </div>
-            
-            <Button 
-              onClick={handleAddToCart} 
-              fullWidth 
+
+            <Button
+              onClick={handleAddToCart}
+              fullWidth
               size="lg"
               disabled={!product.available}
             >

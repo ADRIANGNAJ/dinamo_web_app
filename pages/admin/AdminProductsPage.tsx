@@ -52,7 +52,7 @@ const AdminProductsPage: React.FC = () => {
       id: crypto.randomUUID(),
       available: true,
       category: CATEGORIES[1], // Default to first actual category
-      image: 'https://picsum.photos/400/300' // Default placeholder
+      image: 'https://placehold.co/400x300?text=Producto' // Stable placeholder
     });
     setIsModalOpen(true);
   };
@@ -69,12 +69,33 @@ const AdminProductsPage: React.FC = () => {
     setDeleteConfirmation({ isOpen: true, id });
   };
 
+  const [saving, setSaving] = useState(false);
+
+  // ...
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingProduct.name && editingProduct.price) {
+
+    if (!editingProduct.name || editingProduct.price === undefined) {
+      alert("Por favor completa el nombre y el precio.");
+      return;
+    }
+
+    if (editingProduct.price > 10000) {
+      alert("El precio no puede exceder $10,000.");
+      return;
+    }
+
+    setSaving(true);
+    try {
       await saveProduct(editingProduct as Product);
       setIsModalOpen(false);
       refreshProducts();
+    } catch (error) {
+      console.error("Error saving product:", error);
+      alert("Hubo un error al guardar el producto. Revisa la consola.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -185,6 +206,7 @@ const AdminProductsPage: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700">Precio</label>
               <input
                 type="number"
+                max="10000"
                 className="mt-1 w-full bg-gray-700 border border-gray-600 text-white rounded-md p-2 placeholder-gray-400"
                 value={editingProduct.price || ''}
                 onChange={e => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
@@ -244,7 +266,9 @@ const AdminProductsPage: React.FC = () => {
             <label htmlFor="available" className="text-sm font-medium text-gray-700">Producto Disponible</label>
           </div>
 
-          <Button type="submit" fullWidth>Guardar</Button>
+          <Button type="submit" fullWidth disabled={saving}>
+            {saving ? 'Guardando...' : 'Guardar'}
+          </Button>
         </form>
       </Modal>
 

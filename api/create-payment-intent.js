@@ -59,6 +59,8 @@ module.exports = async (req, res) => {
             amount: Math.round(totalAmount * 100), // Convert to cents
             currency: "mxn",
             automatic_payment_methods: { enabled: true },
+        }, {
+            stripeAccount: process.env.STRIPE_CONNECT_ACCOUNT_ID,
         });
 
         res.status(200).json({

@@ -5,6 +5,7 @@
 import {
     collection,
     getDocs,
+    getDoc, // Added getDoc
     doc,
     setDoc,
     deleteDoc,
@@ -29,11 +30,27 @@ export const getProducts = async (): Promise<Product[]> => {
 };
 
 export const saveProduct = async (product: Product): Promise<void> => {
-    await setDoc(doc(db, PRODUCTS_COLLECTION, product.id), product);
+    console.log("Attempting to save product to Firestore:", product);
+    try {
+        await setDoc(doc(db, PRODUCTS_COLLECTION, product.id), product);
+        console.log("Product saved successfully!");
+    } catch (e) {
+        console.error("Firestore Error in saveProduct:", e);
+        throw e;
+    }
 };
 
 export const deleteProduct = async (id: string): Promise<void> => {
     await deleteDoc(doc(db, PRODUCTS_COLLECTION, id));
+};
+
+export const getProductById = async (id: string): Promise<Product | undefined> => {
+    const docRef = doc(db, PRODUCTS_COLLECTION, id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        return docSnap.data() as Product;
+    }
+    return undefined;
 };
 
 // -- Extras --
