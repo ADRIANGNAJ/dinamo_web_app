@@ -11,6 +11,7 @@ const AdminSettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const [logo, setLogo] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -28,7 +29,15 @@ const AdminSettingsPage: React.FC = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMessage('La imagen es demasiado grande. El tamaño máximo es 5MB.');
+        return;
+      }
+
       setUploading(true);
+      setErrorMessage('');
+      setSuccessMessage('');
+
       try {
         // Upload to Firebase Storage
         const url = await uploadLogo(file);
@@ -39,9 +48,9 @@ const AdminSettingsPage: React.FC = () => {
         // OR we just store the URL in state and save it to DB on "Guardar".
         // Let's do the latter to be safe.
         setSuccessMessage('Imagen subida. No olvides guardar.');
-      } catch (error) {
+      } catch (error: any) {
         console.error("Upload error:", error);
-        alert("Error al subir imagen");
+        setErrorMessage(error.message || "Error al subir imagen. Verifique su conexión y permisos.");
       } finally {
         setUploading(false);
       }
@@ -49,18 +58,21 @@ const AdminSettingsPage: React.FC = () => {
   };
 
   const handleSave = async () => {
+    setErrorMessage('');
+    setSuccessMessage('');
     try {
       await saveAppConfig({ logoUrl: logo || '' });
       setSuccessMessage('Logo actualizado globalmente en Firebase.');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Save error:", error);
-      alert("Error al guardar configuración");
+      setErrorMessage(error.message || "Error al guardar configuración");
     }
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
   const handleRestore = () => {
     setLogo(null);
+    setErrorMessage('');
   };
 
   if (!isAuthenticated) return null;
@@ -129,6 +141,12 @@ const AdminSettingsPage: React.FC = () => {
             <Save className="w-5 h-5" /> Guardar Cambios Globales
           </Button>
         </div>
+
+        {errorMessage && (
+          <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-lg text-center font-medium animate-in fade-in slide-in-from-bottom-2">
+            {errorMessage}
+          </div>
+        )}
 
         {successMessage && (
           <div className="mt-4 p-4 bg-green-50 text-green-700 rounded-lg text-center font-medium animate-in fade-in slide-in-from-bottom-2">
