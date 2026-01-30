@@ -27,10 +27,15 @@ const AdminSettingsPage: React.FC = () => {
   }, [isAuthenticated, navigate]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("handleImageUpload triggered");
     const file = e.target.files?.[0];
     if (file) {
+      console.log("File selected:", file.name, file.size);
       if (file.size > 5 * 1024 * 1024) {
-        setErrorMessage('La imagen es demasiado grande. El tamaño máximo es 5MB.');
+        const msg = 'La imagen es demasiado grande. El tamaño máximo es 5MB.';
+        console.warn(msg);
+        setErrorMessage(msg);
+        alert(msg); // Fallback
         return;
       }
 
@@ -39,8 +44,10 @@ const AdminSettingsPage: React.FC = () => {
       setSuccessMessage('');
 
       try {
+        console.log("Starting Firebase upload...");
         // Upload to Firebase Storage
         const url = await uploadLogo(file);
+        console.log("Upload successful, URL:", url);
         setLogo(url); // Preview immediately
 
         // Auto-save logic? Or wait for explicit save?
@@ -49,11 +56,15 @@ const AdminSettingsPage: React.FC = () => {
         // Let's do the latter to be safe.
         setSuccessMessage('Imagen subida. No olvides guardar.');
       } catch (error: any) {
-        console.error("Upload error:", error);
-        setErrorMessage(error.message || "Error al subir imagen. Verifique su conexión y permisos.");
+        console.error("Upload error caught in component:", error);
+        const msg = error.message || "Error al subir imagen. Verifique su conexión y permisos.";
+        setErrorMessage(msg);
+        alert(`DEBUG ERROR: ${msg} \n\nCheck console for details.`); // Force visibility
       } finally {
         setUploading(false);
       }
+    } else {
+      console.log("No file selected in input");
     }
   };
 
